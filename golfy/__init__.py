@@ -218,7 +218,7 @@ def improve_solution(
     return replicate_to_pool_to_peptides
 
 
-def improve_until_covergence(
+def optimize(
     replicate_to_pool_to_peptides: Solution,
     invalid_neighbors: ConstraintList = [],
     max_iters: int = 100,
