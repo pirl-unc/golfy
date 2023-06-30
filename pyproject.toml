@@ -9,7 +9,7 @@ classifiers = [
     'License :: OSI Approved :: Apache Software License',
     'Topic :: Scientific/Engineering :: Bio-Informatics',
 ]
-version = "0.0.1"  
+version = "1.0.0"  
 
 [tool.setuptools]
 packages = ["golfy"]
