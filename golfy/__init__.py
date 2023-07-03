@@ -89,6 +89,15 @@ class Solution(Spec):
                 }
 
 
+def pairs_to_dict(peptide_pairs: Iterable[Peptide]) -> Mapping[Peptide, set[Peptide]]:
+    peptide_to_set_dict = defaultdict(set)
+
+    for p1, p2 in peptide_pairs:
+        peptide_to_set_dict[p1].add(p2)
+        peptide_to_set_dict[p2].add(p1)
+    return peptide_to_set_dict
+
+
 def random_init(
     num_peptides: int = 100,
     peptides_per_pool: int = 5,
@@ -99,11 +108,6 @@ def random_init(
 ) -> Solution:
     if num_pools is None:
         num_pools = int(np.ceil(num_peptides / peptides_per_pool))
-
-    preferred_neighbor_dict = defaultdict(set)
-    for p1, p2 in preferred_neighbors:
-        preferred_neighbor_dict[p1].add(p2)
-        preferred_neighbor_dict[p2].add(p1)
 
     replicate_to_pool_to_peptides = {}
     for i in range(num_replicates):
@@ -128,13 +132,7 @@ def random_init(
 
 
 def is_valid(s: Solution) -> bool:
-    peptide_to_neighbors = defaultdict(set)
-
-    if s.invalid_neighbors:
-        # treat invalid pairs as if they've already been neighbors in a previous round
-        for p1, p2 in s.invalid_neighbors:
-            peptide_to_neighbors[p1].add(p2)
-            peptide_to_neighbors[p2].add(p1)
+    peptide_to_neighbors = pairs_to_dict(s.invalid_neighbors)
 
     for replicate_idx, pool_to_peptides in s.assignments.items():
         replicate_num = replicate_idx + 1
@@ -166,16 +164,9 @@ def count_violations(s: Solution) -> int:
     """
     Return the number of invalid peptide pairs in the solution
     """
-    invalid_neighbors = s.invalid_neighbors
     replicate_to_pool_to_peptides = s.assignments
 
-    peptide_to_neighbors = defaultdict(set)
-
-    if invalid_neighbors:
-        # treat invalid pairs as if they've already been neighbors in a previous round
-        for p1, p2 in invalid_neighbors:
-            peptide_to_neighbors[p1].add(p2)
-            peptide_to_neighbors[p2].add(p1)
+    peptide_to_neighbors = pairs_to_dict(s.invalid_neighbors)
 
     violations = 0
     for _, pool_to_peptides in replicate_to_pool_to_peptides.items():
@@ -203,15 +194,8 @@ def find_violating_peptides(
     s: Solution,
 ) -> tuple[SwapCandidateList, ReplicateToNeighborDict]:
     replicate_to_pool_to_peptides = s.assignments
-    invalid_neighbors = s.invalid_neighbors
+    peptide_to_neighbors = pairs_to_dict(s.invalid_neighbors)
 
-    peptide_to_neighbors = defaultdict(set)
-
-    if invalid_neighbors:
-        # treat invalid pairs as if they've already been neighbors in a previous round
-        for p1, p2 in invalid_neighbors:
-            peptide_to_neighbors[p1].add(p2)
-            peptide_to_neighbors[p2].add(p1)
     needs_swap = []
     replicate_to_neighbor_dict = {}
     for replicate_idx, pool_to_peptides in replicate_to_pool_to_peptides.items():
@@ -233,7 +217,6 @@ def find_violating_peptides(
 
 def improve_solution(s: Solution, verbose: bool = False):
     replicate_to_pool_to_peptides = s.assignments
-    invalid_neighbors = s.invalid_neighbors
 
     needs_swap, replicate_to_neighbor_dict = find_violating_peptides(s)
 
@@ -382,9 +365,6 @@ def optimize(
     Returns True if non-violating solution found, False if solution still has violations after
     max_iters
     """
-    replicate_to_pool_to_peptides = s.assignments
-    invalid_neighbors = s.invalid_neighbors
-
     old_num_violations = count_violations(s)
     history = [old_num_violations]
     if verbose:
