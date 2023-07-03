@@ -78,3 +78,12 @@ class Solution(Spec):
                     index_mapping[pool_idx]: pool
                     for (pool_idx, pool) in pool_to_peptides.items()
                 }
+
+    def num_pools(self):
+        total = 0
+        for pool_to_peptides in self.assignments.values():
+            total += len(pool_to_peptides)
+        return total
+
+    def average_peptides_per_pool(self):
+        return self.num_peptides * self.num_replicates / self.num_pools()
