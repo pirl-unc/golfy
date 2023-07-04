@@ -190,7 +190,6 @@ def optimize(
         print("Initial solution has %s violations" % (old_num_violations,))
     num_iters_without_improvement = 0
     for i in range(max_iters):
-        history.append(old_num_violations)
         improve_solution(s)
         new_num_violations = count_violations(s)
 
