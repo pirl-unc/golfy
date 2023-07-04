@@ -208,12 +208,12 @@ def optimize(
                 print("Found valid solution after %d swaps" % (i + 1,))
             break
 
-        if num_iters_without_improvement > 10 and add_pool_if_stuck:
+        if num_iters_without_improvement >= 3 and add_pool_if_stuck:
             replicates_in_need = [
                 r for (r, v) in replicate_to_violation_count.items() if v > 0
             ]
             assert len(replicates_in_need) > 0
-            replicate_idx = random.choice(replicates_in_need)
+            replicate_idx = min(replicates_in_need)
             replicate = s.assignments[replicate_idx]
             num_pools = len(replicate)
             replicate[num_pools] = np.array([])
