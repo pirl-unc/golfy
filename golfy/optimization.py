@@ -217,6 +217,7 @@ def optimize(
             replicate = s.assignments[replicate_idx]
             num_pools = len(replicate)
             replicate[num_pools] = np.array([])
+            num_iters_without_improvement = 0
             if verbose:
                 print("Adding pool %d to replicate %d" % (num_pools, replicate_idx + 1))
 
