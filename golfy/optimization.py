@@ -3,7 +3,7 @@ import numpy as np
 
 from .solution import Solution
 from .types import SwapCandidateList, ReplicateToNeighborDict
-from .validity import count_violations
+from .validity import count_violations, violations_per_replicate
 from .util import pairs_to_dict
 
 
@@ -182,8 +182,6 @@ def optimize(
     Returns True if non-violating solution found, False if solution still has violations after
     max_iters
     """
-    replicate_to_pool_to_peptides = s.assignments
-
     old_num_violations = count_violations(s)
     history = [old_num_violations]
     if verbose:
@@ -191,7 +189,8 @@ def optimize(
     num_iters_without_improvement = 0
     for i in range(max_iters):
         improve_solution(s)
-        new_num_violations = count_violations(s)
+        replicate_to_violation_count = violations_per_replicate(s)
+        new_num_violations = sum(replicate_to_violation_count.values())
 
         history.append(new_num_violations)
         if verbose:
@@ -210,15 +209,16 @@ def optimize(
             break
 
         if num_iters_without_improvement > 10 and add_pool_if_stuck:
-            last_replicate_idx = s.num_replicates - 1
-            last_replicate = s.assignments[last_replicate_idx]
-            num_pools = len(last_replicate)
-            last_replicate[num_pools] = np.array([])
+            replicates_in_need = [
+                r for (r, v) in replicate_to_violation_count.items() if v > 0
+            ]
+            assert len(replicates_in_need) > 0
+            replicate_idx = random.choice(replicates_in_need)
+            replicate = s.assignments[replicate_idx]
+            num_pools = len(replicate)
+            replicate[num_pools] = np.array([])
             if verbose:
-                print(
-                    "Adding pool %d to replicate %d"
-                    % (num_pools, last_replicate_idx + 1)
-                )
+                print("Adding pool %d to replicate %d" % (num_pools, replicate_idx + 1))
 
     result = old_num_violations == 0
 
