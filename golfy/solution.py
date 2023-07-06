@@ -57,6 +57,14 @@ class Solution(Spec):
             [i for i in pool_b if i != peptide_b] + [peptide_a]
         )
 
+    def add_empty_pool(self, replicate_idx: int):
+        """
+        Add an empty pool to the given replicate
+        """
+        replicate = self.assignments[replicate_idx]
+        num_pools = len(replicate)
+        replicate[num_pools] = np.array([])
+
     def remove_empty_pools(self):
         """
         Delete any empty pools and renumber the pools to be contiguous

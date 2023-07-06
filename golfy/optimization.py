@@ -214,12 +214,13 @@ def optimize(
             ]
             assert len(replicates_in_need) > 0
             replicate_idx = min(replicates_in_need)
-            replicate = s.assignments[replicate_idx]
-            num_pools = len(replicate)
-            replicate[num_pools] = np.array([])
+            s.add_empty_pool(replicate_idx)
             num_iters_without_improvement = 0
             if verbose:
-                print("Adding pool %d to replicate %d" % (num_pools, replicate_idx + 1))
+                print(
+                    "Adding pool %d to replicate %d"
+                    % (len(s.assignments[replicate_idx]), replicate_idx + 1)
+                )
 
     result = old_num_violations == 0
 

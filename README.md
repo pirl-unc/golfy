@@ -2,7 +2,21 @@
 
 Heuristic solver for peptide pool assingments
 
+## Installation
+
+```sh
+pip install golfy
+```
+
+Also, [scikit-learn](https://scikit-learn.org/stable/index.html) is an requirement for the deconvolution module:
+
+```sh
+pip install scikit-learn
+```
+
 ## Usage
+
+### Peptide to pool assignment
 
 ```python
 
@@ -19,4 +33,17 @@ assert not is_valid(s)
 optimize(s)
 
 assert is_valid(s)
+```
+
+### Deconvolution of hit peptides from ELISpot counts
+
+```python
+from golfy.deconvolution import create_linear_system, solve_linear_system
+
+# s is a golfy.Solution object containing the mapping of peptides to pools
+# counts is a dictionary from (replicate, pool) index pairs to ELISpot counts or activity values
+linear_system = create_linear_system(s, counts)
+#
+solution = solve_linear_system(linear_system)
+print(solution.high_confidence_hits)
 ```
