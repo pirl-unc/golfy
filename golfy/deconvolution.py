@@ -112,7 +112,7 @@ def create_linear_system(
 
 @dataclass
 class DeconvolutionResult:
-    activity_per_peptides: np.ndarray
+    activity_per_peptide: np.ndarray
     prob_hit_per_peptide: np.ndarray
     high_confidence_hits: set[Peptide]
 
@@ -173,7 +173,7 @@ def solve_linear_system(
     high_confidence_hits = set(np.where(frac_hit > 0.5)[0])
 
     return DeconvolutionResult(
-        activity_per_peptides=avg_activity,
+        activity_per_peptide=avg_activity,
         prob_hit_per_peptide=frac_hit,
         high_confidence_hits=high_confidence_hits,
     )
