@@ -12,7 +12,11 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Bio-Informatics',
 ]
 readme = "README.md"
-version = "1.5.0"  
+dynamic = ["version", "dependencies"]
+
+[tool.setuptools.dynamic]
+version = {attr = "golfy.__version__"}
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools]
 packages = ["golfy"]

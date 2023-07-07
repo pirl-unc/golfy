@@ -4,7 +4,7 @@ from .optimization import optimize
 from .solution import Solution
 from .validity import is_valid, count_violations, violations_per_replicate
 
-__version__ = importlib.metadata.version("golfy")
+__version__ = "1.5.1"
 
 __all__ = [
     "init",
@@ -12,4 +12,5 @@ __all__ = [
     "count_violations",
     "is_valid",
     "violations_per_replicate",
+    "__version__",
 ]
