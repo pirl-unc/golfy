@@ -95,3 +95,32 @@ class Solution(Spec):
 
     def average_peptides_per_pool(self):
         return self.num_peptides * self.num_replicates / self.num_pools()
+
+    def peptide_to_pool_dict_for_replicate(
+        self, replicate_idx: Replicate
+    ) -> Mapping[Peptide, Pool]:
+        return {
+            p: pool
+            for (pool, peptides) in self.assignments[replicate_idx].items()
+            for p in peptides
+        }
+
+    def replicate_to_peptide_to_pool_dict(
+        self,
+    ) -> Mapping[Replicate, Mapping[Peptide, Pool]]:
+        return {
+            replicate_idx: self.peptide_to_pool_dict_for_replicate(replicate_idx)
+            for replicate_idx in range(self.num_replicates)
+        }
+
+    def peptide_to_replicate_pool_pair_dict(
+        self,
+    ) -> Mapping[Peptide, tuple[Replicate, Pool]]:
+        return {
+            p: (replicate_idx, pool)
+            for (
+                replicate_idx,
+                peptide_to_pool,
+            ) in self.replicate_to_peptide_to_pool_dict().items()
+            for (p, pool) in peptide_to_pool.items()
+        }
