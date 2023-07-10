@@ -124,6 +124,8 @@ def solve_linear_system(
     sparse_solution=True,
     verbose=False,
 ) -> DeconvolutionResult:
+    from sklearn.linear_model import Lasso, Ridge
+
     A = linear_system.A
     b = linear_system.b
     num_pools, num_peptides_with_constant = A.shape
@@ -142,29 +144,19 @@ def solve_linear_system(
         A_subset = A[subset_indices, :]
         b_subset = b[subset_indices]
         if sparse_solution:
-            # L1 minimizatin to get a small set of confident active peptides
-            import sklearn.linear_model
-
-            lasso = sklearn.linear_model.Lasso(fit_intercept=False, positive=True)
+            # L1 minimization to get a small set of confident active peptides
+            lasso = Lasso(fit_intercept=False, positive=True)
             lasso.fit(A_subset, b_subset)
             x_with_offset = lasso.coef_
-            x, c = x_with_offset[:-1], x_with_offset[-1]
-            if verbose:
-                print("x = %s" % (x,))
-                print("c = %s" % (c,))
         else:
-            # least squares non-sparse solution, works horribly, have fun
-            x_with_offset, residuals, rank, singular_values = np.linalg.lstsq(
-                A, b, rcond=None
-            )
-            x, c = x_with_offset[:-1], x_with_offset[-1]
-            if verbose:
-                print("x = %s" % (x[:-1],))
-                print("c = %f" % (c,))
-                print("residuals = %s" % (residuals,))
-                print("rank = %s" % (rank,))
-                print("singular_values = %s" % (singular_values,))
-
+            # this will work horribly, have fun
+            ridge = Ridge(fit_intercept=False, positive=True)
+            ridge.fit(A_subset, b_subset)
+            x_with_offset = ridge.coef_
+        if verbose:
+            print("x = %s" % (x,))
+            print("c = %s" % (c,))
+        x, c = x_with_offset[:-1], x_with_offset[-1]
         avg_activity += x
         frac_hit += (x > min_peptide_activity).astype(float)
 
