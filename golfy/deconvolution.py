@@ -145,7 +145,7 @@ def solve_linear_system(
             # L1 minimizatin to get a small set of confident active peptides
             import sklearn.linear_model
 
-            lasso = sklearn.linear_model.Lasso(fit_intercept=False)
+            lasso = sklearn.linear_model.Lasso(fit_intercept=False, positive=True)
             lasso.fit(A_subset, b_subset)
             x_with_offset = lasso.coef_
             x, c = x_with_offset[:-1], x_with_offset[-1]
