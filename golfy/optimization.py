@@ -1,3 +1,4 @@
+from collections import defaultdict
 import random
 import time
 
@@ -5,7 +6,7 @@ import numpy as np
 
 from .solution import Solution
 from .types import SwapCandidateList, ReplicateToNeighborDict
-from .validity import count_violations, violations_per_replicate
+from .validity import violations_per_replicate, is_valid
 from .util import pairs_to_dict
 
 
@@ -156,6 +157,117 @@ def improve_solution(s: Solution, verbose: bool = False):
                 swapped_peptides.add(peptide_b)
 
 
+def merge_small_pools(s: Solution) -> int:
+    num_merged = 0
+    peptide_to_invalid = pairs_to_dict(s.invalid_neighbors)
+    peptide_to_invalid_excluding_replicate = {
+        replicate_idx: peptide_to_invalid.copy()
+        for replicate_idx in range(s.num_replicates)
+    }
+    replicate_to_peptide_to_pool_idx = {}
+
+    for replicate_idx, pool_to_peptides in s.assignments.items():
+        peptide_to_pool_idx = {}
+        replicate_to_peptide_to_pool_idx[replicate_idx] = peptide_to_pool_idx
+        for pool_idx, peptides in pool_to_peptides.items():
+            for peptide in peptides:
+                peptide_to_pool_idx[peptide] = pool_idx
+    # print("replicate_to_peptide_to_pool_idx", replicate_to_peptide_to_pool_idx)
+
+    for replicate_idx, pool_to_peptides_1 in s.assignments.items():
+        for other_replicate_idx, pool_to_peptides_2 in s.assignments.items():
+            if replicate_idx == other_replicate_idx:
+                continue
+            for peptides in pool_to_peptides.values():
+                for peptide in peptides:
+                    other_pool_idx = replicate_to_peptide_to_pool_idx[
+                        other_replicate_idx
+                    ][peptide]
+
+                    for other_peptide in pool_to_peptides_2[other_pool_idx]:
+                        if other_peptide != peptide:
+                            peptide_to_invalid_excluding_replicate[replicate_idx][
+                                peptide
+                            ].add(other_peptide)
+                            peptide_to_invalid_excluding_replicate[replicate_idx][
+                                other_peptide
+                            ].add(peptide)
+
+    # print("peptide_to_invalid_excluding_replicate", peptide_to_invalid_excluding_replicate)
+    for i in range(s.num_replicates):
+        pool_to_peptides = s.assignments[i]
+
+        merged = set()
+        # next, try to merge any pools that are smaller than the max size
+        for pool_idx_1, peptides_1 in list(pool_to_peptides.items()):
+            if pool_idx_1 in merged:
+                continue
+
+            if len(peptides_1) >= s.max_peptides_per_pool:
+                continue
+
+            if len(peptides_1) == 0:
+                # skip empty pools, they'll be removed at the end
+                continue
+
+            for pool_idx_2, peptides_2 in list(pool_to_peptides.items()):
+                if pool_idx_1 == pool_idx_2:
+                    # can't merge a pool with itself
+                    continue
+                if len(peptides_2) == 0:
+                    # skip empty pools, they'll be removed at the end
+                    continue
+
+                if len(peptides_1) + len(peptides_2) >= s.max_peptides_per_pool:
+                    # can't exceed the max pool size
+                    continue
+
+                all_valid = True
+                # check if any peptides in pool 1 are invalid with any peptides in pool 2
+                combined_peptides = list(peptides_1) + list(peptides_2)
+                for peptide in list(combined_peptides):
+                    other_peptides = {p for p in combined_peptides if p != peptide}
+                    all_valid = (
+                        len(
+                            peptide_to_invalid_excluding_replicate[i][
+                                peptide
+                            ].intersection(other_peptides)
+                        )
+                        == 0
+                    )
+                    if not all_valid:
+                        break
+
+                if all_valid:
+                    num_merged += 1
+                    print(
+                        "-- merging pools %d and %d in replicate %d"
+                        % (pool_idx_1, pool_idx_2, i + 1)
+                    )
+                    pool_to_peptides[pool_idx_1] = np.array(combined_peptides)
+                    pool_to_peptides[pool_idx_2] = np.array([])
+                    merged.update([pool_idx_1, pool_idx_2])
+                    break
+
+    # just in case we ended up with any empty pools, remove them from the solution
+    s.remove_empty_pools()
+    return num_merged
+
+
+def cleanup(s: Solution, verbose: bool = True) -> int:
+    total_num_merged = 0
+    num_merged = merge_small_pools(s)
+    while num_merged > 0:
+        if verbose:
+            print(
+                "-- merged %d small pools, final number of pools: %d"
+                % (num_merged, s.num_pools())
+            )
+        total_num_merged += num_merged
+        num_merged = merge_small_pools(s)
+    return total_num_merged
+
+
 def optimize(
     s: Solution,
     max_iters: int = 2000,
@@ -260,8 +372,12 @@ def optimize(
 
     result = old_num_violations == 0
 
-    # just in case we ended up with any empty pools, remove them from the solution
-    s.remove_empty_pools()
+    # clean up the solution by merging small pools
+    # and removing any empty pools
+    cleanup(s, verbose=verbose)
+
+    if result == 0:
+        assert is_valid(s)
 
     if return_history:
         return result, np.array(history)
