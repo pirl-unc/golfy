@@ -1,4 +1,6 @@
 import random
+import time
+
 import numpy as np
 
 from .solution import Solution
@@ -41,25 +43,29 @@ def improve_solution(s: Solution, verbose: bool = False):
 
     swapped_pools = set()
     swapped_peptides = set()
+    empty_pools_per_replicate = {
+        replicate_idx: {
+            pool_idx
+            for (pool_idx, pool_peptides) in pool_to_peptides.items()
+            if len(pool_peptides) == 0
+        }
+        for (replicate_idx, pool_to_peptides) in replicate_to_pool_to_peptides.items()
+    }
     for replicate_idx, pool_idx_a, peptide_a in needs_swap:
         if pool_idx_a in swapped_pools or peptide_a in swapped_peptides:
             continue
 
         pool_to_peptides = replicate_to_pool_to_peptides[replicate_idx]
         pool_a = pool_to_peptides[pool_idx_a]
-
+        empty_pools = empty_pools_per_replicate[replicate_idx]
         # if a pool is empty, just move the offending peptide there
-        empty_pools = {
-            pool_idx
-            for (pool_idx, pool_peptides) in pool_to_peptides.items()
-            if len(pool_peptides) == 0
-        }
         if empty_pools:
             pool_idx_b = random.choice(list(empty_pools))
             s.move_peptide(replicate_idx, pool_idx_a, peptide_a, pool_idx_b)
             swapped_pools.add(pool_idx_a)
             swapped_pools.add(pool_idx_b)
             swapped_peptides.add(peptide_a)
+            empty_pools.remove(pool_idx_b)
         else:
             other_peptides = []
             peptide_to_pool_idx = {}
@@ -152,7 +158,7 @@ def improve_solution(s: Solution, verbose: bool = False):
 
 def optimize(
     s: Solution,
-    max_iters: int = 100,
+    max_iters: int = 2000,
     verbose: bool = False,
     add_pool_if_stuck: bool = True,
     return_history: bool = False,
@@ -169,7 +175,7 @@ def optimize(
         Maximum number of swaps to consider performing
 
     verbose
-        Print number of violations for each iteration
+        print number of violations and pools for each iteration
 
     add_pool_if_stuck
         If no improvements have been made for 10 iters, add a pool
@@ -182,19 +188,49 @@ def optimize(
     Returns True if non-violating solution found, False if solution still has violations after
     max_iters
     """
-    old_num_violations = count_violations(s)
+    replicate_to_violation_count = violations_per_replicate(s)
+    old_num_violations = sum(replicate_to_violation_count.values())
+
     history = [old_num_violations]
     if verbose:
         print("Initial solution has %s violations" % (old_num_violations,))
+
+    if old_num_violations / s.num_replicates > 1000:
+        # before first iteration, add a lot of empty pools to any replicates with
+        # more than 1000 violations
+        for replicate_idx, violation_count in replicate_to_violation_count.items():
+            if violation_count > 1000:
+                num_new_pools = int(np.ceil(violation_count / 1000))
+                if verbose:
+                    print(
+                        "-- replicate %d has %d violations, adding %d pools"
+                        % (replicate_idx + 1, violation_count, num_new_pools)
+                    )
+                for _ in range(num_new_pools):
+                    s.add_empty_pool(replicate_idx)
+
     num_iters_without_improvement = 0
     for i in range(max_iters):
+        t0 = time.time()
         improve_solution(s)
+
         replicate_to_violation_count = violations_per_replicate(s)
+
         new_num_violations = sum(replicate_to_violation_count.values())
 
         history.append(new_num_violations)
+
         if verbose:
-            print("%d) %d -> %d" % (i + 1, old_num_violations, new_num_violations))
+            print(
+                "%d) %d -> %d violations (%d pools, %0.2fs)"
+                % (
+                    i + 1,
+                    old_num_violations,
+                    new_num_violations,
+                    s.num_pools(),
+                    time.time() - t0,
+                )
+            )
 
         if old_num_violations <= new_num_violations:
             num_iters_without_improvement += 1
@@ -213,14 +249,14 @@ def optimize(
                 r for (r, v) in replicate_to_violation_count.items() if v > 0
             ]
             assert len(replicates_in_need) > 0
-            replicate_idx = min(replicates_in_need)
-            s.add_empty_pool(replicate_idx)
+            for replicate_idx in replicates_in_need:
+                if verbose:
+                    print(
+                        "-- adding pool %d to replicate %d"
+                        % (len(s.assignments[replicate_idx]), replicate_idx + 1)
+                    )
+                s.add_empty_pool(replicate_idx)
             num_iters_without_improvement = 0
-            if verbose:
-                print(
-                    "Adding pool %d to replicate %d"
-                    % (len(s.assignments[replicate_idx]), replicate_idx + 1)
-                )
 
     result = old_num_violations == 0
 

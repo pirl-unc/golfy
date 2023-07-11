@@ -1,4 +1,5 @@
 from collections import defaultdict
+import math
 from typing import Optional, Literal
 
 import numpy as np
@@ -186,18 +187,44 @@ def init(
     num_peptides: int = 100,
     peptides_per_pool: int = 5,
     num_replicates: int = 3,
-    num_pools: Optional[int] = None,
+    num_pools_per_replicate: Optional[int] = None,
     invalid_neighbors: PeptidePairList = [],
     preferred_neighbors: PeptidePairList = [],
     strategy: Literal["greedy", "random"] = "greedy",
     verbose=False,
 ) -> Solution:
+    """
+    Initialize a Solution for a given configuration
+
+    Args
+    ----
+    num_peptides
+        number of peptides (default: 100)
+
+    peptides_per_pool
+        number of peptides per pool (default: 5)
+
+    num_replicates
+        number of replicates in the Solution (default: 3)
+
+    num_pools_per_replicate
+        number of pools in each replicate (default: ceil(num_peptides / peptides_per_pool))
+
+    invalid_neighbors
+        list of peptide pairs that cannot be in the same pool
+
+    preferred_neighbors
+        list of peptide pairs that should be in the same pool
+
+    strategy
+        initialization strategy, either "greedy" or "random" (default: "greedy")
+    """
     if strategy == "greedy":
         s = _greedy_init(
             num_peptides=num_peptides,
             peptides_per_pool=peptides_per_pool,
             num_replicates=num_replicates,
-            num_pools=num_pools,
+            num_pools=num_pools_per_replicate,
             invalid_neighbors=invalid_neighbors,
             preferred_neighbors=preferred_neighbors,
             verbose=verbose,
@@ -207,7 +234,7 @@ def init(
             num_peptides=num_peptides,
             peptides_per_pool=peptides_per_pool,
             num_replicates=num_replicates,
-            num_pools=num_pools,
+            num_pools=num_pools_per_replicate,
             invalid_neighbors=invalid_neighbors,
             preferred_neighbors=preferred_neighbors,
             verbose=verbose,
