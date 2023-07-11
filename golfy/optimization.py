@@ -161,7 +161,10 @@ def merge_small_pools(s: Solution) -> int:
     num_merged = 0
     peptide_to_invalid = pairs_to_dict(s.invalid_neighbors)
     peptide_to_invalid_excluding_replicate = {
-        replicate_idx: peptide_to_invalid.copy()
+        replicate_idx: {
+            peptide: invalid_set.copy()
+            for (peptide, invalid_set) in peptide_to_invalid.items()
+        }
         for replicate_idx in range(s.num_replicates)
     }
     replicate_to_peptide_to_pool_idx = {}
