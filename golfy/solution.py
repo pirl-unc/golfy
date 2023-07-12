@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass
 import numpy as np
 from typing import Iterable, Mapping
@@ -113,14 +114,14 @@ class Solution(Spec):
             for replicate_idx in range(self.num_replicates)
         }
 
-    def peptide_to_replicate_pool_pair_dict(
+    def peptide_to_replicate_pool_pairs_dict(
         self,
-    ) -> Mapping[Peptide, tuple[Replicate, Pool]]:
-        return {
-            p: (replicate_idx, pool)
-            for (
-                replicate_idx,
-                peptide_to_pool,
-            ) in self.replicate_to_peptide_to_pool_dict().items()
-            for (p, pool) in peptide_to_pool.items()
-        }
+    ) -> Mapping[Peptide, list[tuple[Replicate, Pool]]]:
+        result = defaultdict(list)
+        for (
+            replicate_idx,
+            peptide_to_pool,
+        ) in self.replicate_to_peptide_to_pool_dict().items():
+            for peptide, pool in peptide_to_pool.items():
+                result[peptide].append((replicate_idx, pool))
+        return result

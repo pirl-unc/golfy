@@ -1,15 +1,40 @@
 from golfy import init
 
 
+def test_valid_init():
+    s = init(
+        num_peptides=100, max_peptides_per_pool=5, num_replicates=3, strategy="valid"
+    )
+    assert len(s.assignments) == 3
+    assert len(s.assignments[0]) == 20
+    assert len(s.assignments[0][0]) == 5
+
+
+def test_singleton_init():
+    s = init(
+        num_peptides=100,
+        max_peptides_per_pool=5,
+        num_replicates=3,
+        strategy="singleton",
+    )
+    assert len(s.assignments) == 3
+    assert len(s.assignments[0]) == 100
+    assert len(s.assignments[0][0]) == 1
+
+
 def test_random_init():
-    s = init(num_peptides=100, peptides_per_pool=5, num_replicates=3, strategy="random")
+    s = init(
+        num_peptides=100, max_peptides_per_pool=5, num_replicates=3, strategy="random"
+    )
     assert len(s.assignments) == 3
     assert len(s.assignments[0]) == 20
     assert len(s.assignments[0][0]) == 5
 
 
 def test_greedy_init():
-    s = init(num_peptides=100, peptides_per_pool=5, num_replicates=3, strategy="greedy")
+    s = init(
+        num_peptides=100, max_peptides_per_pool=5, num_replicates=3, strategy="greedy"
+    )
     assert len(s.assignments) == 3
     assert len(s.assignments[0]) == 20
     assert len(s.assignments[0][0]) == 5
@@ -26,7 +51,7 @@ def test_greedy_init_with_preferred_neighbors():
     """
     s = init(
         num_peptides=25,
-        peptides_per_pool=5,
+        max_peptides_per_pool=5,
         num_replicates=3,
         strategy="greedy",
         preferred_neighbors=[(7, 10), (12, 17), (14, 15), (15, 17)],
