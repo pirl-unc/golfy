@@ -5,7 +5,7 @@ from typing import Optional, Literal
 import numpy as np
 
 from .solution import Solution
-from .types import PeptidePairList, Replicate
+from .types import PeptidePairList, Replicate, Peptide
 from .util import pairs_to_dict, transitive_closure
 from .validity import count_violations
 
@@ -32,6 +32,28 @@ def _pools_per_replicate(
         else:
             result[replicate_idx] = num_pools_first_replicate
     return result
+
+
+def _random_peptide_order(
+    num_peptides: int, peptide_to_preferred: dict[Peptide, set[Peptide]]
+):
+    """
+    Return the peptide indices in a random order but make sure the ones with preferred neighbors are first
+    """
+    random_peptide_order = np.arange(num_peptides)
+    np.random.shuffle(random_peptide_order)
+    assert len(set(random_peptide_order)) == num_peptides
+    # assign all peptides with preferred neighbors first
+    peptides_with_preferred_neighbors = [
+        p for p in random_peptide_order if peptide_to_preferred.get(p)
+    ]
+    peptides_without_preferred_neighbors = [
+        p for p in random_peptide_order if peptide_to_preferred.get(p)
+    ]
+    peptide_list = (
+        peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
+    )
+    return peptide_list
 
 
 def _random_init(
@@ -115,19 +137,6 @@ def _valid_init(
 
     replicate_to_pool_to_peptides = {}
 
-    random_peptide_order = np.arange(num_peptides)
-    np.random.shuffle(random_peptide_order)
-    assert len(set(random_peptide_order)) == num_peptides
-    # assign all peptides with preferred neighbors first
-    peptides_with_preferred_neighbors = [
-        p for p in random_peptide_order if p in peptide_to_preferred
-    ]
-    peptides_without_preferred_neighbors = [
-        p for p in random_peptide_order if p not in peptide_to_preferred
-    ]
-    peptide_list = (
-        peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
-    )
     for i in range(num_replicates):
         num_pools = num_pools_per_replicate[i]
         peptides_per_pool = int(math.ceil(num_peptides / num_pools))
@@ -151,7 +160,9 @@ def _valid_init(
             add_to_pool(peptide, new_pool_idx)
             return new_pool_idx
 
-        for peptide in peptide_list:
+        for peptide in _random_peptide_order(
+            num_peptides=num_peptides, peptide_to_preferred=peptide_to_preferred
+        ):
             for preferred_neighbor in peptide_to_preferred.get(peptide, []):
                 if preferred_neighbor in peptide_to_invalid[peptide]:
                     if verbose:
@@ -252,23 +263,6 @@ def _greedy_init(
     replicate_to_pool_to_peptides = {}
 
     for i in range(num_replicates):
-        # shuffling the peptide order for each replicate, in
-        # case there's some ordering effect in the accumulation
-        # of repeated peptide pairs
-        random_peptide_order = np.arange(num_peptides)
-        np.random.shuffle(random_peptide_order)
-        assert len(set(random_peptide_order)) == num_peptides
-        # assign all peptides with preferred neighbors first
-        peptides_with_preferred_neighbors = [
-            p for p in random_peptide_order if p in peptide_to_preferred
-        ]
-        peptides_without_preferred_neighbors = [
-            p for p in random_peptide_order if p not in peptide_to_preferred
-        ]
-        peptide_list = (
-            peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
-        )
-
         num_pools = num_pools_per_replicate[i]
         peptides_per_pool = int(math.ceil(num_peptides / num_pools))
 
@@ -291,7 +285,9 @@ def _greedy_init(
             add_to_pool(peptide, new_pool_idx)
             return new_pool_idx
 
-        for peptide in peptide_list:
+        for peptide in _random_peptide_order(
+            num_peptides=num_peptides, peptide_to_preferred=peptide_to_preferred
+        ):
             for preferred_neighbor in peptide_to_preferred.get(peptide, []):
                 if preferred_neighbor in peptide_to_invalid[peptide]:
                     if verbose:

@@ -11,7 +11,7 @@ from .solution import Solution
 from .validity import is_valid, count_violations, violations_per_replicate
 from .main import find_best_solution
 
-__version__ = "1.9.1"
+__version__ = "1.9.2"
 
 __all__ = [
     "__version__",
