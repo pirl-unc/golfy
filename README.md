@@ -1,6 +1,6 @@
 # golfy
 
-Heuristic solver for peptide pool assingments
+Heuristic solver for peptide pool assignments. Golfy attempts to map peptides to pools with a fixed specified "coverage" (number of pools that each peptide occurs in) while avoiding having any pair of peptides occur in a pool twice.
 
 ## Installation
 
@@ -16,21 +16,45 @@ pip install scikit-learn
 
 ## Usage
 
-### Peptide to pool assignment
+### High level API
+
+Assignments of peptides to pools are called `golfy.Solution` objects, which can be constructed and optimized using several different strategies. You can
+ignore most of the implementation details by just calling `find_best_solution`, which tries multiple different initialization strategies to create multiple solutions,
+optimizes each one, and returns the solution which fewest constraint violations and fewest number of total pools.
+
+```python
+from golfy import find_best_solution
+
+s = find_best_solution(
+    num_peptides=100,
+    max_peptides_per_pool=5,
+    num_replicates=3,
+    invalid_neighbors=[(0,1), (1,2)],
+    preferred_neighbors=[(0,3),(1,5)],
+    allow_extra_pools=False,
+    verbose=False)
+```
+
+A key parameter to `find_best_solution` is `allow_extra_pools`, which determines whether Golfy is allowed to expand the number of total pools beyond the minimum by the `ceil(num_peptides * num_replicates / max_peptides_per_pool)`. If Golfy cannot add extra pools then
+it may not be able to find a valid solution for every combination of parameters (but will still give you the solution with the least constraint violations that it could construct and optimize).
+
+### Initialization and optimization of solutions
+
+If you want more control over the way that solutions are initialized and optimized you can use the `golfy.init` and `golfy.optimize` functions directly.
 
 ```python
 
 from golfy import init, is_valid, optimize
 
 # create a random initial assignment of peptides to pools
-s = init(num_peptides = 100, peptides_per_pool = 5, num_replicates = 3)
+s = init(num_peptides=100, peptides_per_pool=5, num_replicates=3, strategy='random', allow_extra_pools=False)
 
 # the random assignment probably isn't yet a valid solution
 assert not is_valid(s)
 
 # iteratively swap peptides which violate constraints until
 # a valid configuration is achieved
-optimize(s)
+optimize(s, allow_extra_pools=False)
 
 assert is_valid(s)
 ```

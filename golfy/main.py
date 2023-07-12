@@ -1,3 +1,4 @@
+import math
 from typing import Optional, Literal
 
 from .initialization import init
@@ -90,14 +91,14 @@ def find_best_solution(
 
     for strategy, s in solutions.items():
         print(
-            "Initial solution for init strategy '%s', violations=%d, num_pools=%d"
+            "Initialized with strategy '%s': violations=%d, num_pools=%d"
             % (strategy, count_violations(s), s.num_pools())
         )
         optimize(s, allow_extra_pools=allow_extra_pools, verbose=verbose)
         violations = count_violations(s)
         num_pools = s.num_pools()
         print(
-            "After optimization strategy '%s', violations=%d, num_pools=%d"
+            "-- after optimization: violations=%d, num_pools=%d"
             % (strategy, violations, num_pools)
         )
         if (
@@ -108,5 +109,5 @@ def find_best_solution(
             best_solution = s
             best_violations = violations
             best_num_pools = num_pools
-            print("^ new best solution")
+            print("^^^ new best solution")
     return best_solution
