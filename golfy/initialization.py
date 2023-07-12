@@ -48,7 +48,7 @@ def _random_peptide_order(
         p for p in random_peptide_order if peptide_to_preferred.get(p)
     ]
     peptides_without_preferred_neighbors = [
-        p for p in random_peptide_order if peptide_to_preferred.get(p)
+        p for p in random_peptide_order if not peptide_to_preferred.get(p)
     ]
     peptide_list = (
         peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
