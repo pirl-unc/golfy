@@ -251,20 +251,24 @@ def _greedy_init(
 
     replicate_to_pool_to_peptides = {}
 
-    random_peptide_order = np.arange(num_peptides)
-    np.random.shuffle(random_peptide_order)
-    assert len(set(random_peptide_order)) == num_peptides
-    # assign all peptides with preferred neighbors first
-    peptides_with_preferred_neighbors = [
-        p for p in random_peptide_order if p in peptide_to_preferred
-    ]
-    peptides_without_preferred_neighbors = [
-        p for p in random_peptide_order if p not in peptide_to_preferred
-    ]
-    peptide_list = (
-        peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
-    )
     for i in range(num_replicates):
+        # shuffling the peptide order for each replicate, in
+        # case there's some ordering effect in the accumulation
+        # of repeated peptide pairs
+        random_peptide_order = np.arange(num_peptides)
+        np.random.shuffle(random_peptide_order)
+        assert len(set(random_peptide_order)) == num_peptides
+        # assign all peptides with preferred neighbors first
+        peptides_with_preferred_neighbors = [
+            p for p in random_peptide_order if p in peptide_to_preferred
+        ]
+        peptides_without_preferred_neighbors = [
+            p for p in random_peptide_order if p not in peptide_to_preferred
+        ]
+        peptide_list = (
+            peptides_with_preferred_neighbors + peptides_without_preferred_neighbors
+        )
+
         num_pools = num_pools_per_replicate[i]
         peptides_per_pool = int(math.ceil(num_peptides / num_pools))
 
