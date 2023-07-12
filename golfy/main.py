@@ -98,7 +98,7 @@ def find_best_solution(
         violations = count_violations(s)
         num_pools = s.num_pools()
         print(
-            "-- after optimization: violations=%d, num_pools=%d"
+            "-- after optimization of '%s' solution: violations=%d, num_pools=%d"
             % (strategy, violations, num_pools)
         )
         if (
@@ -109,5 +109,5 @@ def find_best_solution(
             best_solution = s
             best_violations = violations
             best_num_pools = num_pools
-            print("^^^ new best solution")
+            print("^^ new best solution")
     return best_solution
