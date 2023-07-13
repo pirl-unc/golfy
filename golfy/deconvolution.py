@@ -97,9 +97,11 @@ def solve_linear_system(
         subset_indices = np.array([i for i in row_indices if i != loo_idx])
         A_subset = A[subset_indices, :]
         b_subset = b[subset_indices]
-        b_min = np.percentile(b_subset, 5)
-        b_max = np.percentile(b_subset, 95)
+        b_min = np.percentile(b_subset, 1)
+        b_max = np.percentile(b_subset, 99)
         scale = b_max - b_min
+
+        assert scale > 0
 
         if sparse_solution:
             # L1 minimization to get a small set of confident active peptides
