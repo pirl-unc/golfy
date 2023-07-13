@@ -1,6 +1,6 @@
 from golfy import init, optimize, is_valid
+from golfy.simulation import simulate_elispot_counts
 from golfy.deconvolution import (
-    simulate_elispot_counts,
     create_linear_system,
     solve_linear_system,
 )

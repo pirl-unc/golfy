@@ -8,7 +8,7 @@ from .types import Replicate, Pool, Peptide, PeptidePairList
 from .validity import count_violations
 
 
-def find_best_solution(
+def find_best_design(
     num_peptides: int = 100,
     max_peptides_per_pool: int = 5,
     num_replicates: int = 3,
@@ -81,15 +81,15 @@ def find_best_solution(
         # let us be strict about the number of pools
         init_strategies = ["greedy", "random"]
 
-    solutions = {
+    designs = {
         strategy: init(strategy=strategy, **shared_kwargs)
         for strategy in init_strategies
     }
-    best_solution = None
+    best_design = None
     best_violations = None
     best_num_pools = None
 
-    for strategy, s in solutions.items():
+    for strategy, s in designs.items():
         print(
             "Initialized with strategy '%s': violations=%d, num_pools=%d"
             % (strategy, count_violations(s), s.num_pools())
@@ -102,12 +102,12 @@ def find_best_solution(
             % (strategy, violations, num_pools)
         )
         if (
-            best_solution is None
+            best_design is None
             or (violations < best_violations)
             or (violations == best_violations and num_pools < best_num_pools)
         ):
-            best_solution = s
+            best_design = s
             best_violations = violations
             best_num_pools = num_pools
             print("^^ new best solution")
-    return best_solution
+    return best_design

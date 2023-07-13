@@ -3,64 +3,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .types import Replicate, Pool, Peptide
+from .types import Peptide, SpotCounts, Pool, Replicate
 from .design import Design
-
-SpotCounts = Mapping[Replicate, Mapping[Pool, int]]
-
-
-def simulate_elispot_counts(
-    s: Design,
-    num_hits=5,
-    max_activity_per_well=2000,
-    min_background_peptide_activity=0,
-    max_background_peptide_activity=20,
-    min_hit_peptide_activity=50,
-    max_hit_peptide_activity=500,
-    verbose=False,
-) -> tuple[SpotCounts, set[Peptide]]:
-    num_peptides = s.num_peptides
-
-    background_peptide_activity_range = (
-        max_background_peptide_activity - min_background_peptide_activity
-    )
-    hit_peptide_activity_range = max_hit_peptide_activity - min_hit_peptide_activity
-
-    all_peptides = np.arange(num_peptides)
-    np.random.shuffle(all_peptides)
-    hit_peptides = all_peptides[:num_hits]
-    not_hit_peptides = all_peptides[num_hits:]
-    if verbose:
-        print("Hits: %s" % (hit_peptides,))
-
-    background = (
-        np.random.rand(num_peptides) * background_peptide_activity_range
-        + min_background_peptide_activity
-    )
-    if verbose:
-        print("Background activity: %s" % (background,))
-
-    hit_activity = (
-        np.random.rand(num_peptides) * hit_peptide_activity_range
-        + min_hit_peptide_activity
-    )
-    hit_activity[not_hit_peptides] = 0
-    if verbose:
-        print("Hit activity: %s" % (hit_activity,))
-
-    spot_counts: SpotCounts = {
-        r: {
-            pool: min(
-                max_activity_per_well,
-                int(sum([background[i] + hit_activity[i] for i in peptides])),
-            )
-            for (pool, peptides) in d.items()
-        }
-        for (r, d) in s.assignments.items()
-    }
-    if verbose:
-        print("Spot counts: %s" % (spot_counts,))
-    return (spot_counts, set(hit_peptides))
 
 
 @dataclass

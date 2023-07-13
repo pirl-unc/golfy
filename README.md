@@ -18,14 +18,13 @@ pip install scikit-learn
 
 ### High level API
 
-Assignments of peptides to pools are called `golfy.Solution` objects, which can be constructed and optimized using several different strategies. You can
-ignore most of the implementation details by just calling `find_best_solution`, which tries multiple different initialization strategies to create multiple solutions,
-optimizes each one, and returns the solution which fewest constraint violations and fewest number of total pools.
+Assignments of peptides to pools are called `golfy.Design` objects, which can be constructed and optimized using several different strategies. You can
+ignore most of the implementation details by just calling `find_best_design`, which tries multiple different initialization strategies to create multiple designs, optimizes each one, and returns the design which fewest constraint violations and fewest number of total pools.
 
 ```python
-from golfy import find_best_solution
+from golfy import find_best_design
 
-s = find_best_solution(
+s = find_best_design(
     num_peptides=100,
     max_peptides_per_pool=5,
     num_replicates=3,
@@ -35,12 +34,12 @@ s = find_best_solution(
     verbose=False)
 ```
 
-A key parameter to `find_best_solution` is `allow_extra_pools`, which determines whether Golfy is allowed to expand the number of total pools beyond the minimum by the `ceil(num_peptides * num_replicates / max_peptides_per_pool)`. If Golfy cannot add extra pools then
-it may not be able to find a valid solution for every combination of parameters (but will still give you the solution with the least constraint violations that it could construct and optimize).
+A key parameter to `find_best_design` is `allow_extra_pools`, which determines whether Golfy is allowed to expand the number of total pools beyond the minimum by the `ceil(num_peptides * num_replicates / max_peptides_per_pool)`. If Golfy cannot add extra pools then
+it may not be able to find a valid solution for every combination of parameters (but will still give you the design with the least constraint violations that it could construct and optimize).
 
-### Initialization and optimization of solutions
+### Initialization and optimization of designs
 
-If you want more control over the way that solutions are initialized and optimized you can use the `golfy.init` and `golfy.optimize` functions directly.
+If you want more control over the way that desgins are initialized and optimized you can use the `golfy.init` and `golfy.optimize` functions directly.
 
 ```python
 
@@ -49,7 +48,7 @@ from golfy import init, is_valid, optimize
 # create a random initial assignment of peptides to pools
 s = init(num_peptides=100, peptides_per_pool=5, num_replicates=3, strategy='random', allow_extra_pools=False)
 
-# the random assignment probably isn't yet a valid solution
+# the random assignment probably isn't yet a valid design
 assert not is_valid(s)
 
 # iteratively swap peptides which violate constraints until
@@ -64,7 +63,7 @@ assert is_valid(s)
 ```python
 from golfy.deconvolution import create_linear_system, solve_linear_system
 
-# s is a golfy.Solution object containing the mapping of peptides to pools
+# s is a golfy.Design object containing the mapping of peptides to pools
 # counts is a dictionary from (replicate, pool) index pairs to ELISpot counts or activity values
 linear_system = create_linear_system(s, counts)
 

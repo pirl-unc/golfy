@@ -1,21 +1,21 @@
 from .deconvolution import (
-    simulate_elispot_counts,
     create_linear_system,
     solve_linear_system,
-    SpotCounts,
     DeconvolutionResult,
 )
-from .initialization import init
-from .optimization import optimize
 from .design import Design
+from .initialization import init
+from .main import find_best_design
+from .optimization import optimize
+from .simulation import simulate_elispot_counts
+from .types import SpotCounts
 from .validity import is_valid, count_violations, violations_per_replicate
-from .main import find_best_solution
 
 __version__ = "1.9.4"
 
 __all__ = [
     "__version__",
-    "find_best_solution",
+    "find_best_design",
     "Design",
     "init",
     "optimize",
