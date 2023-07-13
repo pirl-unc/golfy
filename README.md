@@ -1,6 +1,6 @@
 # golfy
 
-Heuristic solver for peptide pool assignments. Golfy attempts to map peptides to pools with a fixed specified "coverage" (number of pools that each peptide occurs in) while avoiding having any pair of peptides occur in a pool twice.
+Heuristic solver for experimental designs using pools of peptides, such as [combinatorial ELISpot epitope mapping](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0147812). Golfy constructs experimental designs which assign peptides to pools with a fixed specified "coverage" (number of pools that each peptide occurs in) while trying to avoid having any pair of peptides occur together in a pool more than once. More formally, Golfy is a collection of heuristic search techniques for [partially balanced incomplete block designs](https://www.jstor.org/stable/40383923), where *block design* means that it's an experimental design where peptides are tested in groups, *incomplete* means that each block is smaller than the full set of peptides, and *partially balanced* means that a pair of peptides can occur together in a group 0 or 1 times. 
 
 ## Installation
 
