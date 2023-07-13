@@ -142,7 +142,9 @@ def evaluate_design(
                 s, num_hits=num_hits
             )
             linear_system = create_linear_system(s, spot_counts)
-            result = solve_linear_system(linear_system, leave_on_out=False)
+            result = solve_linear_system(
+                linear_system, leave_on_out=False, min_peptide_activity=0.2
+            )
 
             predicted_hits = result.high_confidence_hits
 

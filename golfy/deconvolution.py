@@ -63,17 +63,26 @@ class DeconvolutionResult:
 
 def solve_linear_system(
     linear_system: LinearSystem,
-    min_peptide_activity: float = 0.2,
+    min_peptide_activity: float = 1.0,
     leave_on_out=True,
     sparse_solution=True,
+    alpha=None,
     verbose=False,
 ) -> DeconvolutionResult:
-    from sklearn.linear_model import LassoCV, Ridge
+    from sklearn.linear_model import Lasso, Ridge, LassoCV
 
     A = linear_system.A
     b = linear_system.b
 
     num_pools, num_peptides_with_constant = A.shape
+    if alpha is None:
+        alpha = 1.0 / (2 * num_peptides_with_constant)
+    if verbose:
+        print(
+            "[solve_linear_system] A.shape: %s, b.shape: %s, alpha = %0.4f"
+            % (A.shape, b.shape, alpha)
+        )
+
     num_peptides = num_peptides_with_constant - 1
     row_indices = list(range(num_pools))
     if leave_on_out:
@@ -88,17 +97,26 @@ def solve_linear_system(
         subset_indices = np.array([i for i in row_indices if i != loo_idx])
         A_subset = A[subset_indices, :]
         b_subset = b[subset_indices]
+        b_min = np.percentile(b_subset, 5)
+        b_max = np.percentile(b_subset, 95)
+        scale = b_max - b_min
+
         if sparse_solution:
             # L1 minimization to get a small set of confident active peptides
-            lasso = LassoCV(fit_intercept=False, positive=True)
-            lasso.fit(A_subset, b_subset)
+            model = Lasso(
+                fit_intercept=False,
+                positive=True,
+                alpha=alpha,
+                selection="random",
+            )
 
-            x_with_offset = lasso.coef_
         else:
             # this will work horribly, have fun
-            ridge = Ridge(fit_intercept=False, positive=True)
-            ridge.fit(A_subset, b_subset)
-            x_with_offset = ridge.coef_
+            model = Ridge(fit_intercept=False, positive=True, alpha=alpha)
+
+        model.fit(A_subset, np.maximum(0, b_subset - b_min) / scale)
+        x_with_offset = scale * model.coef_
+
         if verbose:
             print("x = %s" % (x,))
             print("c = %s" % (c,))

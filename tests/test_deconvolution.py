@@ -25,3 +25,12 @@ def test_deconvolution():
         # probabilities of hits or not
         solution = solve_linear_system(linear_system, leave_on_out=loo)
         assert solution.high_confidence_hits == hit_peptides
+
+
+if __name__ == "__main__":
+    d = globals().copy()
+    for name in d:
+        if name.startswith("test_"):
+            print("Running %s" % (name,))
+            obj = d[name]
+            obj()
