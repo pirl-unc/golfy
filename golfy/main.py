@@ -169,7 +169,7 @@ def evaluate_design(
 def best_design_for_pool_budget(
     num_peptides: int = 100,
     max_pools: int = 96,
-    num_simulation_iters: int = 1,
+    num_simulation_iters: int = 2,
     invalid_neighbors: PeptidePairList = [],
     preferred_neighbors: PeptidePairList = [],
     verbose: bool = False,
@@ -222,10 +222,10 @@ def best_design_for_pool_budget(
                         "%s: %d pools, %d violations, precision=%0.2f, recall=%0.2f, f1=%0.2f"
                         % (key, num_pools, num_violations, p, r, f1)
                     )
-                    # minimize violations & maximize (f1, precision, recall), minimize pools, maximize replicates
+                    # maximize f1, minimize violations,  maximize (precision, recall), minimize pools, maximize replicates
                     sort_key = (
-                        num_violations,
                         -round(f1, 2),
+                        num_violations,
                         -round(p, 2),
                         -round(r, 2),
                         num_pools,

@@ -15,7 +15,7 @@ from .simulation import (
 from .types import SpotCounts
 from .validity import is_valid, count_violations, violations_per_replicate
 
-__version__ = "2.0.1"
+__version__ = "2.0.2"
 
 __all__ = [
     "__version__",
