@@ -4,7 +4,7 @@ from typing import Optional, Literal
 
 import numpy as np
 
-from .solution import Solution
+from .design import Design
 from .types import PeptidePairList, Replicate, Peptide
 from .util import pairs_to_dict, transitive_closure
 from .validity import count_violations
@@ -65,7 +65,7 @@ def _random_init(
     preferred_neighbors: PeptidePairList = [],
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     replicate_to_pool_to_peptides = {}
     for i in range(num_replicates):
         peptide_array = np.arange(num_peptides)
@@ -79,7 +79,7 @@ def _random_init(
             end_idx = peptides_per_pool * (j + 1)
             pool_assignments[j] = peptide_array[start_idx:end_idx]
 
-    return Solution(
+    return Design(
         num_peptides=num_peptides,
         max_peptides_per_pool=max_peptides_per_pool,
         num_replicates=num_replicates,
@@ -98,7 +98,7 @@ def _singleton_init(
     preferred_neighbors: PeptidePairList = [],
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     """
     Initialize every peptide to be in its own pool
     """
@@ -109,7 +109,7 @@ def _singleton_init(
         for p in range(num_peptides):
             pool_to_peptides[p] = np.array([p])
         replicate_to_pool_to_peptides[i] = pool_to_peptides
-    return Solution(
+    return Design(
         num_peptides=num_peptides,
         max_peptides_per_pool=max_peptides_per_pool,
         num_replicates=num_replicates,
@@ -128,7 +128,7 @@ def _valid_init(
     preferred_neighbors: PeptidePairList = [],
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     peptide_to_invalid = pairs_to_dict(invalid_neighbors)
     peptide_to_preferred = transitive_closure(pairs_to_dict(preferred_neighbors))
     if verbose:
@@ -234,7 +234,7 @@ def _valid_init(
             pool_idx: np.array(sorted(peptides))
             for (pool_idx, peptides) in pool_to_peptides.items()
         }
-    return Solution(
+    return Design(
         num_peptides=num_peptides,
         max_peptides_per_pool=max_peptides_per_pool,
         num_replicates=num_replicates,
@@ -253,7 +253,7 @@ def _greedy_init(
     preferred_neighbors: PeptidePairList = [],
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     peptide_to_invalid = pairs_to_dict(invalid_neighbors)
     peptide_to_preferred = transitive_closure(pairs_to_dict(preferred_neighbors))
     if verbose:
@@ -366,7 +366,7 @@ def _greedy_init(
             for (pool_idx, peptides) in pool_to_peptides.items()
         }
 
-    return Solution(
+    return Design(
         num_peptides=num_peptides,
         max_peptides_per_pool=max_peptides_per_pool,
         num_replicates=num_replicates,
@@ -386,7 +386,7 @@ def init(
     strategy: Literal["greedy", "random", "valid", "singleton"] = "greedy",
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     """
     Initialize a Solution for a given configuration
 

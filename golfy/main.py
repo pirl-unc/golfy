@@ -3,7 +3,7 @@ from typing import Optional, Literal
 
 from .initialization import init
 from .optimization import optimize
-from .solution import Solution
+from .design import Design
 from .types import Replicate, Pool, Peptide, PeptidePairList
 from .validity import count_violations
 
@@ -17,7 +17,7 @@ def find_best_solution(
     preferred_neighbors: PeptidePairList = [],
     allow_extra_pools: bool = False,
     verbose: bool = False,
-) -> Solution:
+) -> Design:
     """
     Try several different initialization methods and return the solution which
     is optimized to have the fewest violations and the fewest pools.

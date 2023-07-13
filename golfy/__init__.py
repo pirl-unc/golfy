@@ -7,16 +7,16 @@ from .deconvolution import (
 )
 from .initialization import init
 from .optimization import optimize
-from .solution import Solution
+from .design import Design
 from .validity import is_valid, count_violations, violations_per_replicate
 from .main import find_best_solution
 
-__version__ = "1.9.3"
+__version__ = "1.9.4"
 
 __all__ = [
     "__version__",
     "find_best_solution",
-    "Solution",
+    "Design",
     "init",
     "optimize",
     "count_violations",

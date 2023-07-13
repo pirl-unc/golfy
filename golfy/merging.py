@@ -1,12 +1,12 @@
 import numpy as np
 
-from .solution import Solution
+from .design import Design
 from .types import Replicate, Pool, Peptide
 from .util import pairs_to_dict, transitive_closure
 
 
 def _make_peptide_to_invalid_excluding_replicate(
-    s: Solution,
+    s: Design,
 ) -> dict[Replicate, dict[Peptide, set[Peptide]]]:
     peptide_to_invalid = pairs_to_dict(s.invalid_neighbors)
     peptide_to_invalid_excluding_replicate = {
@@ -39,7 +39,7 @@ def _make_peptide_to_invalid_excluding_replicate(
     return peptide_to_invalid_excluding_replicate
 
 
-def merge_small_pools(s: Solution, verbose: bool = False) -> int:
+def merge_small_pools(s: Design, verbose: bool = False) -> int:
     num_merged = 0
 
     peptide_to_preferred = transitive_closure(pairs_to_dict(s.preferred_neighbors))
@@ -146,7 +146,7 @@ def merge_small_pools(s: Solution, verbose: bool = False) -> int:
     return num_merged
 
 
-def cleanup(s: Solution, verbose: bool = True, max_iters=1000) -> int:
+def cleanup(s: Design, verbose: bool = True, max_iters=1000) -> int:
     total_num_merged = 0
     prev_num_pools = s.num_pools()
 

@@ -4,13 +4,13 @@ from dataclasses import dataclass
 import numpy as np
 
 from .types import Replicate, Pool, Peptide
-from .solution import Solution
+from .design import Design
 
 SpotCounts = Mapping[Replicate, Mapping[Pool, int]]
 
 
 def simulate_elispot_counts(
-    s: Solution,
+    s: Design,
     num_hits=5,
     max_activity_per_well=2000,
     min_background_peptide_activity=0,
@@ -72,7 +72,7 @@ class LinearSystem:
 
 
 def create_linear_system(
-    s: Solution, spot_counts: SpotCounts, verbose=False
+    s: Design, spot_counts: SpotCounts, verbose=False
 ) -> LinearSystem:
     num_peptides = s.num_peptides
     num_pools = s.num_pools()

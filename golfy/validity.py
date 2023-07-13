@@ -1,10 +1,10 @@
-from .solution import Solution
+from .design import Design
 from .types import Replicate, Pool, Peptide, Mapping
 from .util import pairs_to_dict
 
 
 def violations_per_replicate(
-    s: Solution,
+    s: Design,
     error_on_duplicate=True,
     error_on_extra=True,
     error_on_missing=True,
@@ -70,7 +70,7 @@ def violations_per_replicate(
 
 
 def count_violations(
-    s: Solution,
+    s: Design,
     error_on_duplicate=True,
     error_on_extra=True,
     error_on_missing=True,
@@ -88,7 +88,7 @@ def count_violations(
 
 
 def is_valid(
-    s: Solution,
+    s: Design,
     error_on_duplicate=True,
     error_on_extra=True,
     error_on_missing=True,

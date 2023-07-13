@@ -5,14 +5,14 @@ import time
 import numpy as np
 
 from .merging import cleanup
-from .solution import Solution
+from .design import Design
 from .types import SwapCandidateList, ReplicateToNeighborDict, Replicate, Pool, Peptide
 from .validity import violations_per_replicate, is_valid, count_violations
 from .util import pairs_to_dict
 
 
 def find_violating_peptides(
-    s: Solution,
+    s: Design,
 ) -> tuple[SwapCandidateList, ReplicateToNeighborDict]:
     replicate_to_pool_to_peptides = s.assignments
     # treat invalid pairs as if they've already been neighbors in a previous round
@@ -45,7 +45,7 @@ def _groupby_replicate(
     return result
 
 
-def improve_solution(s: Solution, verbose: bool = False):
+def improve_solution(s: Design, verbose: bool = False):
     replicate_to_pool_to_peptides = s.assignments
     replicate_to_peptide_to_pool = s.replicate_to_peptide_to_pool_dict()
 
@@ -181,7 +181,7 @@ def improve_solution(s: Solution, verbose: bool = False):
 
 
 def optimize(
-    s: Solution,
+    s: Design,
     max_iters: int = 2000,
     verbose: bool = False,
     allow_extra_pools: bool = True,
