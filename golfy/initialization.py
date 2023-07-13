@@ -86,6 +86,7 @@ def _random_init(
         invalid_neighbors=invalid_neighbors,
         preferred_neighbors=preferred_neighbors,
         assignments=replicate_to_pool_to_peptides,
+        allow_extra_pools=allow_extra_pools,
     )
 
 
@@ -116,6 +117,7 @@ def _singleton_init(
         invalid_neighbors=invalid_neighbors,
         preferred_neighbors=preferred_neighbors,
         assignments=replicate_to_pool_to_peptides,
+        allow_extra_pools=allow_extra_pools,
     )
 
 
@@ -241,6 +243,7 @@ def _valid_init(
         invalid_neighbors=invalid_neighbors,
         preferred_neighbors=preferred_neighbors,
         assignments=replicate_to_pool_to_peptides,
+        allow_extra_pools=allow_extra_pools,
     )
 
 
@@ -373,6 +376,7 @@ def _greedy_init(
         invalid_neighbors=invalid_neighbors,
         preferred_neighbors=preferred_neighbors,
         assignments=replicate_to_pool_to_peptides,
+        allow_extra_pools=allow_extra_pools,
     )
 
 

@@ -63,15 +63,16 @@ class DeconvolutionResult:
 
 def solve_linear_system(
     linear_system: LinearSystem,
-    min_peptide_activity: float = 1.0,
+    min_peptide_activity: float = 0.2,
     leave_on_out=True,
     sparse_solution=True,
     verbose=False,
 ) -> DeconvolutionResult:
-    from sklearn.linear_model import Lasso, Ridge
+    from sklearn.linear_model import LassoCV, Ridge
 
     A = linear_system.A
     b = linear_system.b
+
     num_pools, num_peptides_with_constant = A.shape
     num_peptides = num_peptides_with_constant - 1
     row_indices = list(range(num_pools))
@@ -89,8 +90,9 @@ def solve_linear_system(
         b_subset = b[subset_indices]
         if sparse_solution:
             # L1 minimization to get a small set of confident active peptides
-            lasso = Lasso(fit_intercept=False, positive=True)
+            lasso = LassoCV(fit_intercept=False, positive=True)
             lasso.fit(A_subset, b_subset)
+
             x_with_offset = lasso.coef_
         else:
             # this will work horribly, have fun

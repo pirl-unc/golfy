@@ -5,7 +5,7 @@ from .deconvolution import (
 )
 from .design import Design
 from .initialization import init
-from .main import find_best_design
+from .main import find_best_design, best_design_for_pool_budget
 from .optimization import optimize
 from .simulation import (
     simulate_elispot_counts,
@@ -15,11 +15,12 @@ from .simulation import (
 from .types import SpotCounts
 from .validity import is_valid, count_violations, violations_per_replicate
 
-__version__ = "1.9.5"
+__version__ = "2.0.0"
 
 __all__ = [
     "__version__",
     "find_best_design",
+    "best_design_for_pool_budget",
     "Design",
     "init",
     "optimize",

@@ -16,15 +16,28 @@ pip install scikit-learn
 
 ## Usage
 
-### High level API
+Assignments of peptides to pools are called `golfy.Design` objects, which can be constructed and optimized using several different strategies.
 
-Assignments of peptides to pools are called `golfy.Design` objects, which can be constructed and optimized using several different strategies. You can
-ignore most of the implementation details by just calling `find_best_design`, which tries multiple different initialization strategies to create multiple designs, optimizes each one, and returns the design which fewest constraint violations and fewest number of total pools.
+### Designs for single round ESLIpot experiments
+
+If all you care about is finding the best design for a fixed number of peptides and a maximum number of pools (eg 96 wells on a plate) then use thing function:
+
+```python
+from golfy import best_design_for_pool_budget
+
+design = best_design_for_pool_budget(num_peptides=200, max_pools=96)
+```
+
+It will loop over a very large configuration space, try to make the best design for each configuration, simulate ELISpot counts under a simplistic model, and score each design by its ability to deconvolve hits out of pooled results in a single round of experimentation (without a second round of validation for individual peptides).
+
+### More control over design parameters
+
+If you want to control parameters such as the number of replicates or the maximum peptides per pool, you can call `find_best_design`, which tries multiple different initialization strategies to create multiple designs, optimizes each one, and returns the design which fewest constraint violations and fewest number of total pools.
 
 ```python
 from golfy import find_best_design
 
-s = find_best_design(
+design = find_best_design(
     num_peptides=100,
     max_peptides_per_pool=5,
     num_replicates=3,

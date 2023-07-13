@@ -1,7 +1,8 @@
 from collections import defaultdict
-from dataclasses import dataclass
-import numpy as np
+from dataclasses import dataclass, field
 from typing import Iterable, Mapping
+
+import numpy as np
 
 from .types import PeptidePairList, Replicate, Pool, Peptide
 
@@ -11,13 +12,40 @@ class Spec:
     num_peptides: int
     max_peptides_per_pool: int
     num_replicates: int
+    allow_extra_pools: bool
     invalid_neighbors: PeptidePairList
     preferred_neighbors: PeptidePairList
+
+    def to_tuple(self):
+        return (
+            self.num_peptides,
+            self.max_peptides_per_pool,
+            self.num_replicates,
+            self.allow_extra_pools,
+            tuple(sorted(self.invalid_neighbors)),
+            tuple(sorted(self.preferred_neighbors)),
+        )
+
+    def __eq__(self, other):
+        return isinstance(other, Spec) and self.to_tuple() == other.to_tuple()
+
+    def __hash__(self):
+        return hash(self.to_tuple())
 
 
 @dataclass
 class Design(Spec):
     assignments: Mapping[Replicate, Mapping[Pool, Iterable[Peptide]]]
+
+    def to_spec(self) -> Spec:
+        return Spec(
+            num_peptides=self.num_peptides,
+            max_peptides_per_pool=self.max_peptides_per_pool,
+            num_replicates=self.num_replicates,
+            allow_extra_pools=self.allow_extra_pools,
+            invalid_neighbors=self.invalid_neighbors,
+            preferred_neighbors=self.preferred_neighbors,
+        )
 
     def move_peptide(
         self,
