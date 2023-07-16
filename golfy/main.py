@@ -122,17 +122,38 @@ def find_best_design(
 def generate_candidate_specs_for_pool_budget(
     num_peptides: int = 100,
     max_pools: int = 96,
+    min_num_replicates: int = 2,
+    max_num_replicates: int = 5,
+    min_max_peptides_per_pool: int = 2,
+    max_max_peptides_per_pool: Optional[int] = None,
+    allow_extra_pools: Optional[bool] = None,
 ) -> list[Spec]:
     """
     Generator of candidate configurations from which we might want to try
     to make Designs that fit into the given pool budget.
     """
-    for max_peptides_per_pool in range(2, max(3, num_peptides // 5)):
+    if allow_extra_pools is None:
+        allow_extra_pools = [True, False]
+    elif type(allow_extra_pools) is bool:
+        allow_extra_pools = [allow_extra_pools]
+
+    if max_max_peptides_per_pool is None:
+        max_max_peptides_per_pool = max(3, num_peptides // 5)
+
+    if min_num_replicates > max_num_replicates:
+        max_num_replicates = min_num_replicates
+
+    if min_max_peptides_per_pool > max_max_peptides_per_pool:
+        max_max_peptides_per_pool = min_max_peptides_per_pool
+
+    for max_peptides_per_pool in range(
+        min_max_peptides_per_pool, max_max_peptides_per_pool
+    ):
         if max_peptides_per_pool * max_pools < num_peptides:
             # not enough pools to fit all peptides without replicates
             continue
 
-        for num_replicates in range(2, 6):
+        for num_replicates in range(min_num_replicates, max_num_replicates + 1):
             min_pools_for_spec = math.ceil(
                 num_peptides * num_replicates / max_peptides_per_pool
             )
@@ -140,15 +161,12 @@ def generate_candidate_specs_for_pool_budget(
                 # not enough pools to fit all peptides with given number of replicates
                 continue
 
-            for allow_extra_pools in [True, False]:
-                if min_pools_for_spec == max_pools and allow_extra_pools:
-                    # no need to allow extra pools if we're already at the maximum
-                    continue
+            for curr_allow_extra_pools in allow_extra_pools:
                 yield Spec(
                     num_peptides=num_peptides,
                     max_peptides_per_pool=max_peptides_per_pool,
                     num_replicates=num_replicates,
-                    allow_extra_pools=allow_extra_pools,
+                    allow_extra_pools=curr_allow_extra_pools,
                     invalid_neighbors=[],
                     preferred_neighbors=[],
                 )
@@ -157,9 +175,15 @@ def generate_candidate_specs_for_pool_budget(
 def score_designs_for_pool_budget(
     num_peptides: int = 100,
     max_pools: int = 96,
-    num_simulation_iters: int = 2,
+    num_simulation_iters: int = 3,
     invalid_neighbors: PeptidePairList = [],
     preferred_neighbors: PeptidePairList = [],
+    min_pools: Optional[int] = None,
+    min_num_replicates: int = 2,
+    max_num_replicates: int = 5,
+    min_max_peptides_per_pool: int = 2,
+    max_max_peptides_per_pool: Optional[int] = None,
+    allow_extra_pools: Optional[bool] = None,
     verbose: bool = False,
 ) -> list[tuple[Design, EvaluationResult]]:
     assert num_peptides > 1, "No need to pool if there's only one peptide"
@@ -169,7 +193,13 @@ def score_designs_for_pool_budget(
     designs = []
     specs = list(
         generate_candidate_specs_for_pool_budget(
-            num_peptides=num_peptides, max_pools=max_pools
+            num_peptides=num_peptides,
+            max_pools=max_pools,
+            min_num_replicates=min_num_replicates,
+            max_num_replicates=max_num_replicates,
+            min_max_peptides_per_pool=min_max_peptides_per_pool,
+            max_max_peptides_per_pool=max_max_peptides_per_pool,
+            allow_extra_pools=allow_extra_pools,
         )
     )
     print("Generated %d candidate specs" % (len(specs),))
@@ -189,7 +219,12 @@ def score_designs_for_pool_budget(
             **shared_kwargs,
         )
         num_pools = s.num_pools()
-        if num_pools <= max_pools:
+        if min_pools is not None and num_pools < min_pools:
+            continue
+
+        if num_pools > max_pools:
+            print("%s: %d pools > %d max pools" % (spec, num_pools, max_pools))
+        else:
             scores = evaluate_design(s, num_simulation_iters)
             print("%s: %s" % (spec, scores))
             designs.append((s, scores))
@@ -199,9 +234,14 @@ def score_designs_for_pool_budget(
 def best_design_for_pool_budget(
     num_peptides: int = 100,
     max_pools: int = 96,
-    num_simulation_iters: int = 2,
+    num_simulation_iters: int = 3,
     invalid_neighbors: PeptidePairList = [],
     preferred_neighbors: PeptidePairList = [],
+    min_pools: Optional[int] = None,
+    min_num_replicates: int = 2,
+    max_num_replicates: int = 5,
+    min_max_peptides_per_pool: int = 2,
+    max_max_peptides_per_pool: Optional[int] = None,
     verbose: bool = False,
 ):
     assert num_peptides > 1, "No need to pool if there's only one peptide"
@@ -213,6 +253,11 @@ def best_design_for_pool_budget(
         num_simulation_iters=num_simulation_iters,
         invalid_neighbors=invalid_neighbors,
         preferred_neighbors=preferred_neighbors,
+        min_pools=min_pools,
+        min_num_replicates=min_num_replicates,
+        max_num_replicates=max_num_replicates,
+        min_max_peptides_per_pool=min_max_peptides_per_pool,
+        max_max_peptides_per_pool=max_max_peptides_per_pool,
         verbose=verbose,
     )
     best_pair = sorted(designs_with_scores, key=lambda x: x[1].sort_key())[0]
