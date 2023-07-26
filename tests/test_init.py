@@ -1,4 +1,4 @@
-from golfy import init
+from golfy import init, count_violations
 
 
 def test_valid_init():
@@ -71,3 +71,15 @@ def test_greedy_init_with_preferred_neighbors():
     assert peptide_to_pool[12] == peptide_to_pool[17]
     assert peptide_to_pool[14] == peptide_to_pool[15]
     assert peptide_to_pool[15] == peptide_to_pool[17]
+
+
+def test_repeat_block_init():
+    s = init(
+        num_peptides=100, max_peptides_per_pool=5, num_replicates=3, strategy="repeat"
+    )
+
+    assert len(s.assignments) == 3
+    assert len(s.assignments[0]) == 20
+    assert len(s.assignments[0][0]) == 5
+
+    assert count_violations(s, error_on_duplicate=False) > 0

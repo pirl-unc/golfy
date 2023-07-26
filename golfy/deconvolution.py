@@ -1,4 +1,4 @@
-from typing import Mapping
+from typing import Mapping, Literal
 from dataclasses import dataclass
 
 import numpy as np
@@ -135,3 +135,99 @@ def solve_linear_system(
         prob_hit_per_peptide=frac_hit,
         high_confidence_hits=high_confidence_hits,
     )
+
+
+def em_step(linear_system: LinearSystem, beta: np.ndarray) -> np.ndarray:
+    """
+    Implements equation 5 from Strom et al (2016)
+        (X.T @ (y / (X @ beta))) * (beta / X.sum(0))
+    where X is the design matrix, y is the pool activities, and beta is the current estimate of the peptide activities
+    """
+    X = linear_system.A
+    y = linear_system.b
+    return (X.T @ (y / (X @ beta))) * (beta / X.sum(0))
+
+
+def em_init(linear_system: LinearSystem) -> np.ndarray:
+    """
+    Initialize beta for E-M algorithm from Strom et al (2016)
+    to have each peptide be the mean of its pool activities
+    """
+    X = linear_system.A
+    y = linear_system.b
+    return X.T @ y / X.sum(0)
+
+
+def em_deconvolve(
+    linear_system: LinearSystem, min_peptide_activity=1.0, max_iters=100, verbose=False
+) -> DeconvolutionResult:
+    """
+    Implements the expectation-maximization algorithm from
+    "A statistical approach to determining responses to individual peptides from pooled-peptide ELISpot data"
+    """
+    beta = em_init(linear_system=linear_system)
+    for i in range(max_iters):
+        beta = em_step(linear_system=linear_system, beta=beta)
+        if verbose:
+            print("[em_deconvolve] Iter %d: beta = %s" % (i, beta))
+
+    activity_per_peptide = beta[:-1]
+    above_limit = activity_per_peptide > min_peptide_activity
+    return DeconvolutionResult(
+        activity_per_peptide=activity_per_peptide,
+        prob_hit_per_peptide=above_limit.astype(float),
+        high_confidence_hits=np.where(above_limit)[0],
+    )
+
+
+def deconvolve(
+    s: Design,
+    spot_counts: SpotCounts,
+    method: Literal["lasso", "ridge", "em"] = "lasso",
+    min_peptide_activity=1.0,
+    verbose=False,
+):
+    """
+    Arguments
+    ---------
+    s
+        Dictionary containing mapping of replicates -> pools -> peptides
+
+    spot_counts
+        Dictionary containing mapping of replicates -> pool -> spot counts
+
+    min_peptide_activity
+        Minimum estimated activity of a peptide to be considered for hit set
+
+    method
+        - "lasso": L1 regularized linear regression
+        - "ridge": L2 regularized linear regression
+        - "em": EM algorithm from Strom et al. 2016
+                      "A statistical approach to determining responses to individual peptides from pooled-peptide ELISpot data"
+
+    verbose
+        Print diagnostic information
+
+    Returns DeconvolutionResult
+    """
+    linear_system = create_linear_system(s, spot_counts, verbose=verbose)
+    if method == "lasso":
+        return solve_linear_system(
+            linear_system,
+            sparse_solution=True,
+            leave_on_out=False,
+            min_peptide_activity=min_peptide_activity,
+        )
+    elif method == "ridge":
+        return solve_linear_system(
+            linear_system,
+            sparse_solution=False,
+            leave_on_out=False,
+            min_peptide_activity=min_peptide_activity,
+        )
+    elif method == "em":
+        return em_deconvolve(
+            linear_system, min_peptide_activity=min_peptide_activity, verbose=verbose
+        )
+    else:
+        raise ValueError("Unknown method: %s" % (method,))

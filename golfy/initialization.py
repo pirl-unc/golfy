@@ -34,6 +34,42 @@ def _pools_per_replicate(
     return result
 
 
+def _repeat_init(
+    num_peptides: int,
+    max_peptides_per_pool: int,
+    num_replicates: int,
+    num_pools_per_replicate: dict[Replicate, int],
+    invalid_neighbors: PeptidePairList = [],
+    preferred_neighbors: PeptidePairList = [],
+    allow_extra_pools: bool = False,
+    verbose: bool = False,
+):
+    """
+    Assign peptides to random blocks and then repeat those blocks r times
+    """
+    replicate_to_pool_to_peptides = {}
+    for i in range(num_replicates):
+        peptide_array = np.arange(num_peptides)
+        np.random.shuffle(peptide_array)
+        pool_assignments = {}
+        num_pools = num_pools_per_replicate[i]
+        peptides_per_pool = int(np.ceil(num_peptides / num_pools))
+        for j in range(num_pools):
+            start_idx = peptides_per_pool * j
+            end_idx = peptides_per_pool * (j + 1)
+            pool_assignments[j] = peptide_array[start_idx:end_idx]
+        replicate_to_pool_to_peptides[i] = pool_assignments
+    return Design(
+        num_peptides=num_peptides,
+        max_peptides_per_pool=max_peptides_per_pool,
+        num_replicates=num_replicates,
+        invalid_neighbors=invalid_neighbors,
+        preferred_neighbors=preferred_neighbors,
+        assignments=replicate_to_pool_to_peptides,
+        allow_extra_pools=allow_extra_pools,
+    )
+
+
 def _random_peptide_order(
     num_peptides: int, peptide_to_preferred: dict[Peptide, set[Peptide]]
 ):
@@ -387,7 +423,7 @@ def init(
     num_pools_per_replicate: Optional[int | dict[Replicate, int]] = None,
     invalid_neighbors: PeptidePairList = [],
     preferred_neighbors: PeptidePairList = [],
-    strategy: Literal["greedy", "random", "valid", "singleton"] = "greedy",
+    strategy: Literal["greedy", "random", "valid", "singleton", "repeat"] = "greedy",
     allow_extra_pools: bool = False,
     verbose: bool = False,
 ) -> Design:
@@ -415,7 +451,7 @@ def init(
         list of peptide pairs that should be in the same pool
 
     strategy
-        initialization strategy, one of {"greedy", "random", "singleton", "valid"} (default: "greedy")
+        initialization strategy, one of {"greedy", "random", "singleton", "valid", "repeat"} (default: "greedy")
 
     allow_extra_pools
         whether to allow extra pools to be created to satisfy constraints (default: False)
@@ -428,6 +464,7 @@ def init(
         "random": _random_init,
         "singleton": _singleton_init,
         "valid": _valid_init,
+        "repeat": _repeat_init,
     }.get(strategy)
     if num_pools_per_replicate is None:
         num_pools_per_replicate = _pools_per_replicate(

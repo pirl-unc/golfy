@@ -74,5 +74,7 @@ def evaluate_design(
         recall=np.mean(rs),
         f1=np.mean(f1s),
         num_pools=s.num_pools(),
-        num_violations=count_violations(s),
+        num_violations=count_violations(
+            s, error_on_duplicate=False, error_on_extra=False, error_on_missing=False
+        ),
     )
