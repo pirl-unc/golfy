@@ -59,6 +59,8 @@ class DeconvolutionResult:
     activity_per_peptide: np.ndarray
     prob_hit_per_peptide: np.ndarray
     high_confidence_hits: set[Peptide]
+    background: float
+    cutoff: float
 
 
 def solve_linear_system(
@@ -92,7 +94,7 @@ def solve_linear_system(
 
     avg_activity = np.zeros(num_peptides)
     frac_hit = np.zeros(num_peptides)
-
+    cutoff = 0
     for loo_idx in loo_indices:
         subset_indices = np.array([i for i in row_indices if i != loo_idx])
         A_subset = A[subset_indices, :]
@@ -124,20 +126,36 @@ def solve_linear_system(
             print("c = %s" % (c,))
         x, c = x_with_offset[:-1], x_with_offset[-1]
         avg_activity += x
-        frac_hit += (x > min_peptide_activity).astype(float)
+        curr_cutoff = choose_cutoff(
+            A=A_subset,
+            b=b_subset,
+            estimated_constant_offsset=c,
+            min_peptide_activity=min_peptide_activity,
+            sparse_estimate=sparse_solution,
+        )
+
+        frac_hit += (x > curr_cutoff).astype(float)
+        cutoff += curr_cutoff
 
     avg_activity /= len(loo_indices)
     frac_hit /= len(loo_indices)
     high_confidence_hits = set(np.where(frac_hit > 0.5)[0])
+    cutoff /= len(loo_indices)
 
     return DeconvolutionResult(
         activity_per_peptide=avg_activity,
         prob_hit_per_peptide=frac_hit,
         high_confidence_hits=high_confidence_hits,
+        background=c,
+        cutoff=cutoff,
     )
 
 
-def em_step(linear_system: LinearSystem, beta: np.ndarray) -> np.ndarray:
+def em_step(
+    linear_system: LinearSystem,
+    beta: np.ndarray,
+    # stability_factor=1e-6,
+) -> np.ndarray:
     """
     Implements equation 5 from Strom et al (2016)
         (X.T @ (y / (X @ beta))) * (beta / X.sum(0))
@@ -158,25 +176,82 @@ def em_init(linear_system: LinearSystem) -> np.ndarray:
     return X.T @ y / X.sum(0)
 
 
+def choose_cutoff(
+    A: np.ndarray,
+    b: np.ndarray,
+    estimated_constant_offsset: float,
+    min_peptide_activity: float,
+    sparse_estimate: bool,
+) -> float:
+    empty_wells = np.where(A.sum(1) == 0)[0]
+    any_empty_wells = len(empty_wells) > 0
+    if any_empty_wells:
+        empty_well_background = b[empty_wells].mean()
+    else:
+        empty_well_background = 0
+
+    estimated_constant_offsset = max(0, estimated_constant_offsset)
+    print(A, b, estimated_constant_offsset, empty_well_background, min_peptide_activity)
+    if sparse_estimate:
+        return (
+            np.sqrt(estimated_constant_offsset)
+            + empty_well_background
+            + min_peptide_activity
+        )
+    else:
+        return (
+            3 * estimated_constant_offsset
+            + empty_well_background
+            + min_peptide_activity
+        )
+
+
 def em_deconvolve(
-    linear_system: LinearSystem, min_peptide_activity=1.0, max_iters=100, verbose=False
+    linear_system: LinearSystem,
+    min_peptide_activity=1.0,
+    max_iters=500,
+    verbose=False,
+    tol=1e-3,
+    sparsity_threshold=1e-4,
 ) -> DeconvolutionResult:
     """
     Implements the expectation-maximization algorithm from
     "A statistical approach to determining responses to individual peptides from pooled-peptide ELISpot data"
     """
     beta = em_init(linear_system=linear_system)
+    last_beta = beta.copy()
     for i in range(max_iters):
         beta = em_step(linear_system=linear_system, beta=beta)
+        mean_abs_diff = np.mean(np.abs(beta - last_beta))
         if verbose:
-            print("[em_deconvolve] Iter %d: beta = %s" % (i, beta))
-
+            print(
+                "[em_deconvolve] Iter %d: beta = %s (mean abs change=%f)"
+                % (i, beta.round(2), mean_abs_diff)
+            )
+        if mean_abs_diff < tol:
+            if verbose:
+                print("[em_deconvolve] Stopping at iter %d" % i)
+            break
+        beta[np.abs(beta) < sparsity_threshold] = 0
+        last_beta = beta.copy()
     activity_per_peptide = beta[:-1]
-    above_limit = activity_per_peptide > min_peptide_activity
+    activity_per_peptide[activity_per_peptide < sparsity_threshold] = 0
+    print(activity_per_peptide.round(1))
+    background = beta[-1]
+    cutoff = choose_cutoff(
+        A=linear_system.A,
+        b=linear_system.b,
+        estimated_constant_offsset=background,
+        min_peptide_activity=min_peptide_activity,
+        sparse_estimate=False,
+    )
+    above_limit = activity_per_peptide > cutoff
     return DeconvolutionResult(
         activity_per_peptide=activity_per_peptide,
         prob_hit_per_peptide=above_limit.astype(float),
-        high_confidence_hits=np.where(above_limit)[0],
+        high_confidence_hits=set(np.where(above_limit)[0]),
+        background=background,
+        cutoff=cutoff,
     )
 
 

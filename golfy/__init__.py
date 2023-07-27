@@ -1,6 +1,8 @@
 from .deconvolution import (
     create_linear_system,
     solve_linear_system,
+    em_deconvolve,
+    deconvolve,
     DeconvolutionResult,
 )
 from .design import Design
@@ -15,7 +17,7 @@ from .simulation import (
 from .types import SpotCounts
 from .validity import is_valid, count_violations, violations_per_replicate
 
-__version__ = "2.4.0"
+__version__ = "2.5.0"
 
 __all__ = [
     "__version__",
@@ -33,5 +35,7 @@ __all__ = [
     "create_linear_system",
     "solve_linear_system",
     "SpotCounts",
+    "deconvolve",
+    "em_deconvolve",
     "DeconvolutionResult",
 ]

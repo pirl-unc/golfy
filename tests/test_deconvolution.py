@@ -3,10 +3,11 @@ from golfy.simulation import simulate_elispot_counts
 from golfy.deconvolution import (
     create_linear_system,
     solve_linear_system,
+    deconvolve,
 )
 
 
-def test_deconvolution():
+def test_deconvolution_lasso():
     s = init(100, 3, 5)
     optimize(s)
     assert is_valid(s)
@@ -25,6 +26,24 @@ def test_deconvolution():
         # probabilities of hits or not
         solution = solve_linear_system(linear_system, leave_on_out=loo)
         assert solution.high_confidence_hits == hit_peptides
+
+
+def test_deconvolution_em():
+    s = init(100, 3, 5)
+    optimize(s)
+    assert is_valid(s)
+    # make sure the margin between background and hit activities
+    # is so large that we never falsely identify a background peptide
+    counts, hit_peptides = simulate_elispot_counts(
+        s,
+        num_hits=3,
+        max_background_peptide_activity=1,
+        min_hit_peptide_activity=100,
+    )
+
+    solution = deconvolve(s, counts, method="em")
+
+    assert solution.high_confidence_hits == hit_peptides
 
 
 if __name__ == "__main__":
