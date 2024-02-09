@@ -121,10 +121,12 @@ def solve_linear_system(
         model.fit(A_subset, np.maximum(0, b_subset - b_min) / scale)
         x_with_offset = scale * model.coef_
 
+        x, c = x_with_offset[:-1], x_with_offset[-1]
+
         if verbose:
             print("x = %s" % (x,))
             print("c = %s" % (c,))
-        x, c = x_with_offset[:-1], x_with_offset[-1]
+            
         avg_activity += x
         curr_cutoff = choose_cutoff(
             A=A_subset,
