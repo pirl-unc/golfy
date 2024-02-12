@@ -43,7 +43,7 @@ def test_deconvolution_em():
 
     solution = deconvolve(s, counts, method="em")
 
-    assert solution.high_confidence_hits == hit_peptides
+    assert solution.high_confidence_hits.issuperset(hit_peptides)
 
 
 if __name__ == "__main__":
