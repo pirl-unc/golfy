@@ -1,3 +1,5 @@
+[Golfy](https://github.com/pirl-unc/golfy) [![Tests](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml/badge.svg)](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml) [![Coverage Status](https://coveralls.io/repos/github/pirl-unc/golfy/badge.svg?branch=main)](https://coveralls.io/github/pirl-unc/golfy)  <a href="https://pypi.python.org/pypi/golfy/"><img src="https://img.shields.io/pypi/v/golfy?maxAge=1000" alt="PyPI" /></a> [![PyPI downloads](https://img.shields.io/pypi/dm/golfy.svg)](https://pypistats.org/packages/golfy) |
+
 # Golfy
 
 Golfy is a heuristic solver for experimental designs using pools of peptides, such as [combinatorial ELISpot epitope mapping](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0147812). Golfy constructs experimental designs which assign peptides to pools with a fixed specified "coverage" (number of pools that each peptide occurs in) while trying to avoid having any pair of peptides occur together in a pool more than once. 
