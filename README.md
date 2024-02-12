@@ -1,4 +1,4 @@
-[Golfy](https://github.com/pirl-unc/golfy) [![Tests](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml/badge.svg)](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml) [![Coverage Status](https://coveralls.io/repos/github/pirl-unc/golfy/badge.svg?branch=main)](https://coveralls.io/github/pirl-unc/golfy)  <a href="https://pypi.python.org/pypi/golfy/"><img src="https://img.shields.io/pypi/v/golfy?maxAge=1000" alt="PyPI" /></a> [![PyPI downloads](https://img.shields.io/pypi/dm/golfy.svg)](https://pypistats.org/packages/golfy) |
+[![Tests](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml/badge.svg)](https://github.com/pirl-unc/golfy/actions/workflows/tests.yml) [![Coverage Status](https://coveralls.io/repos/github/pirl-unc/golfy/badge.svg?branch=main)](https://coveralls.io/github/pirl-unc/golfy)  <a href="https://pypi.python.org/pypi/golfy/"><img src="https://img.shields.io/pypi/v/golfy?maxAge=1000" alt="PyPI" /></a> [![PyPI downloads](https://img.shields.io/pypi/dm/golfy.svg)](https://pypistats.org/packages/golfy) 
 
 # Golfy
 
