@@ -85,7 +85,7 @@ def solve_linear_system(
     alpha=None,
     verbose=False,
 ) -> DeconvolutionResult:
-    from sklearn.linear_model import Lasso, Ridge, LassoCV
+    from sklearn.linear_model import Lasso, Ridge
 
     A = linear_system.A
     b = linear_system.b

@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 
 from .design import Design
-from .types import Replicate, Pool, Peptide
+from .types import Replicate, Peptide
 from .util import pairs_to_dict, transitive_closure
 
 
