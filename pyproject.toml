@@ -1,15 +1,24 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "golfy"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [ {name="Alex Rubinsteyn", email="alex.rubinsteyn@unc.edu" } ]
 description = "Heuristic peptide pool optimization for ELISpot and other immunological assays"
 classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
-    'Environment :: Console',
-    'Operating System :: OS Independent',
-    'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: Apache Software License',
-    'Topic :: Scientific/Engineering :: Bio-Informatics',
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 readme = "README.md"
 dynamic = ["version", "dependencies"]
